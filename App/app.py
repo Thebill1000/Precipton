@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 from flask import Flask, request, jsonify
 from twilio.rest import Client
 import mandrill
@@ -27,7 +28,21 @@ TWILIO_PHONE_NUMBER = '+2347063808082'
 # Mandrill API key
 MANDRILL_API_KEY = 'md-ae8bYGk7lI679BT04SfNJQ'
 
-# ... (other routes)
+def send_sms(phone_number, message):
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    client.messages.create(to=phone_number, from_=TWILIO_PHONE_NUMBER, body=message)
+
+def send_email(recipient_email, subject, message):
+    mandrill_client = mandrill.Mandrill(MANDRILL_API_KEY)
+    message_data = {
+        'from_email': 'your_email@example.com',
+        'to': [{'email': recipient_email}],
+        'subject': subject,
+        'text': message,
+    }
+    mandrill_client.messages.send(message=message_data, async=False)
+
+# Routes
 
 @app.route('/add_patient', methods=['POST'])
 def add_patient():
@@ -43,5 +58,29 @@ def add_patient():
 
     return jsonify({'message': f'Patient {name} added successfully!'}), 201
 
+@app.route('/schedule_reminder', methods=['POST'])
+def schedule_reminder():
+    data = request.get_json()
+    name = data['name']
+    reminder_time = data['reminder_time']  # Implement your scheduling logic here
+    patient = Patient.query.filter_by(name=name).first()
+
+    if patient:
+        medication = patient.medication
+        phone_number = patient.phone_number
+        email = patient.email
+        message = f"Reminder: It's time to take your {medication}."
+
+        # Schedule SMS and email reminders here
+        send_sms(phone_number, message)
+        send_email(email, 'Medication Reminder', message)
+
+        return jsonify({'message': f'Reminder scheduled for {name}!'}), 200
+    else:
+        return jsonify({'error': f'Patient {name} not found!'}), 404
+
 # ... (other routes)
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
