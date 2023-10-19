@@ -1,49 +1,47 @@
-from flask import Flask, request, render_template
+#!/usr/bin/python3
+from flask import Flask, request, jsonify
 from twilio.rest import Client
+import mandrill
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///patients.db'
+db = SQLAlchemy(app)
+
+class Patient(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    medication = db.Column(db.String(120), nullable=False)
+    phone_number = db.Column(db.String(15), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+
+db.create_all()
+
 # Twilio credentials
-account_sid = 'YOUR_TWILIO_ACCOUNT_SID'
-auth_token = 'YOUR_TWILIO_AUTH_TOKEN'
-twilio_phone_number = 'YOUR_TWILIO_PHONE_NUMBER'
+TWILIO_ACCOUNT_SID = 'ACb78b0fd70d33ac6cabf5308a70f73c2f'
+TWILIO_AUTH_TOKEN = '5a121b6623138bf8b9da439ad61e261d'
+TWILIO_PHONE_NUMBER = '+2347063808082'
 
-client = Client(account_sid, auth_token)
+# Mandrill API key
+MANDRILL_API_KEY = 'md-ae8bYGk7lI679BT04SfNJQ'
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# ... (other routes)
 
-@app.route('/schedule', methods=['POST'])
-def schedule_reminder():
-    patient_name = request.form['patient_name']
-    medication_name = request.form['medication_name']
-    phone_number = request.form['phone_number']
-    reminder_time = request.form['reminder_time']
+@app.route('/add_patient', methods=['POST'])
+def add_patient():
+    data = request.get_json()
+    name = data['name']
+    medication = data['medication']
+    phone_number = data['phone_number']
+    email = data['email']
 
-    # Schedule reminders using Twilio
-    reminder_message = f"Hello {patient_name}! Don't forget to take your {medication_name}."
+    new_patient = Patient(name=name, medication=medication, phone_number=phone_number, email=email)
+    db.session.add(new_patient)
+    db.session.commit()
 
-    # Convert reminder time to seconds
-    if reminder_time == '1':
-        reminder_seconds = 60
-    elif reminder_time == '5':
-        reminder_seconds = 300
-    elif reminder_time == '30':
-        reminder_seconds = 1800
-    else:
-        reminder_seconds = 3600
+    return jsonify({'message': f'Patient {name} added successfully!'}), 201
 
-    # Schedule SMS reminder
-    message = client.messages.create(
-        to=phone_number,
-        from_=twilio_phone_number,
-        body=reminder_message,
-        send_at=int(time.time()) + reminder_seconds
-    )
-
-    return f"Reminder scheduled successfully! Message SID: {message.sid}"
-
-if __name__ == '__main__':
-    app.run(debug=True)
+# ... (other routes)
 
