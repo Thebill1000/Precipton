@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Reminder</title>
+</head>
+<body>
+    <h1>Medication Reminder</h1>
+    <form action="/schedule" method="post">
+        <label for="patient_name">Patient Name:</label>
+        <input type="text" id="patient_name" name="patient_name" required><br><br>
+
+        <label for="medication_name">Medication Name:</label>
+        <input type="text" id="medication_name" name="medication_name" required><br><br>
+
+        <label for="phone_number">Phone Number:</label>
+        <input type="text" id="phone_number" name="phone_number" required><br><br>
+
+        <label for="reminder_time">Reminder Time (in minutes):</label>
+        <select id="reminder_time" name="reminder_time" required>
+            <option value="1">1 minute</option>
+            <option value="5">5 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="60">1 hour</option>
+        </select><br><br>
+
+        <input type="submit" value="Schedule Reminder">
+    </form>
+</body>
+</html>
+
